@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LocalKaam — Jamshedpur</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #17212B;
+    --ink-soft: #3C4A57;
+    --paper: #EFEAE0;
+    --paper-raised: #F8F5EE;
+    --line: #D8D0C0;
+    --accent: #E3A72E;
+    --accent-ink: #17212B;
+    --rust: #A6432E;
+    --good: #3D7A5C;
+    --shadow: rgba(23, 33, 43, 0.08);
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #EDE8DC;
+      --ink-soft: #B7AE9D;
+      --paper: #14191F;
+      --paper-raised: #1B222A;
+      --line: #2C333B;
+      --accent: #E3A72E;
+      --accent-ink: #14191F;
+      --rust: #D2694F;
+      --good: #5AA57E;
+      --shadow: rgba(0, 0, 0, 0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #EDE8DC;
+    --ink-soft: #B7AE9D;
+    --paper: #14191F;
+    --paper-raised: #1B222A;
+    --line: #2C333B;
+    --accent: #E3A72E;
+    --accent-ink: #14191F;
+    --rust: #D2694F;
+    --good: #5AA57E;
+    --shadow: rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 { font-family: 'Bricolage Grotesque', system-ui, sans-serif; margin: 0; }
+
+  .shell { display: flex; min-height: 100vh; }
+
+  /* --- Side dispatch rail --- */
+  nav.rail {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--paper-raised);
+    border-right: 1px solid var(--line);
+    padding: 24px 16px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  .brand {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-bottom: 2px;
+  }
+  .brand span { color: var(--rust); }
+  .brand-sub {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 28px;
+  }
+  .rail button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    color: var(--ink-soft);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 4px;
+    transition: background 0.15s, color 0.15s;
+  }
+  .rail button:hover { background: var(--line); color: var(--ink); }
+  .rail button.active { background: var(--ink); color: var(--paper); }
+  .rail-foot {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-size: 11.5px;
+    color: var(--ink-soft);
+  }
+
+  main { flex: 1; min-width: 0; padding: 40px 44px 80px; max-width: 920px; }
+  @media (max-width: 720px) {
+    .shell { flex-direction: column; }
+    nav.rail { width: 100%; height: auto; position: static; display: flex; align-items: center; gap: 8px; padding: 14px 16px; overflow-x: auto; }
+    .brand, .brand-sub, .rail-foot { display: none; }
+    .rail button { width: auto; white-space: nowrap; margin-bottom: 0; }
+    main { padding: 24px 18px 60px; }
+  }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .page-head { margin-bottom: 28px; }
+  .page-head h1 { font-size: 28px; margin-bottom: 6px; }
+  .page-head p { color: var(--ink-soft); font-size: 14.5px; max-width: 60ch; }
+
+  /* --- Cards / forms --- */
+  .card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 24px;
+  }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 560px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+  .field { margin-bottom: 18px; }
+  input, select, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 14px;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  textarea { resize: vertical; min-height: 64px; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 11px 20px;
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn:hover { opacity: 0.88; }
+  .btn.accent { background: var(--accent); color: var(--accent-ink); }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+  .btn.small { padding: 6px 12px; font-size: 12.5px; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .confirm {
+    margin-top: 18px;
+    padding: 16px 18px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--good) 14%, var(--paper-raised));
+    border: 1px solid var(--good);
+    font-size: 14px;
+  }
+  .confirm b { font-family: 'IBM Plex Mono', monospace; }
+
+  /* --- Metrics strip --- */
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 26px; }
+  @media (max-width: 640px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+  .metric {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    background: var(--paper-raised);
+  }
+  .metric .num { font-family: 'Bricolage Grotesque', sans-serif; font-size: 26px; font-weight: 700; }
+  .metric .lbl { font-size: 11.5px; color: var(--ink-soft); margin-top: 2px; }
+
+  /* --- Dispatch table --- */
+  .filters { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filters select { width: auto; }
+
+  .job-list { display: flex; flex-direction: column; gap: 10px; }
+  .job {
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--paper-raised);
+    padding: 14px 16px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: center;
+  }
+  .job-main { min-width: 0; }
+  .job-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+  .job-cat { font-weight: 600; }
+  .job-meta { font-size: 12.5px; color: var(--ink-soft); }
+  .job-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .job-actions select { width: auto; font-size: 12.5px; padding: 6px 8px; }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 100px;
+    border: 1px solid var(--line);
+  }
+  .tag.new { color: var(--rust); border-color: var(--rust); }
+  .tag.assigned { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+  .tag.completed { color: var(--good); border-color: var(--good); }
+  .tag.cancelled { color: var(--ink-soft); }
+  .tag.repeat { color: var(--rust); border-color: var(--rust); background: color-mix(in srgb, var(--rust) 12%, transparent); }
+  .stars { color: var(--accent); letter-spacing: 1px; }
+
+  .empty {
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    padding: 30px 20px;
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+
+  /* --- Provider roster --- */
+  .roster-list { display: flex; flex-direction: column; gap: 8px; margin-top: 22px; }
+  .prov {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    padding: 12px 16px;
+    background: var(--paper-raised);
+  }
+  .prov-name { font-weight: 600; }
+  .prov-meta { font-size: 12.5px; color: var(--ink-soft); }
+  .switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    user-select: none;
+  }
+  .switch input { width: auto; }
+
+  ::selection { background: var(--accent); color: var(--accent-ink); }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <nav class="rail">
+    <div class="brand">Local<span>Kaam</span></div>
+    <div class="brand-sub">Jamshedpur — home services</div>
+    <button data-view="book" class="active">Book a service</button>
+    <button data-view="dispatch">Dispatch board</button>
+    <button data-view="providers">Providers</button>
+    <div class="rail-foot" id="mode-banner">Connecting…</div>
+  </nav>
+
+  <main>
+
+    <!-- BOOK VIEW -->
+    <section class="view active" id="view-book">
+      <div class="page-head">
+        <h1>Book a service</h1>
+        <p>Electrician, plumber or AC repair — in Bistupur or Sakchi. We assign a vetted local provider and confirm on WhatsApp.</p>
+      </div>
+      <div class="card">
+        <form id="booking-form">
+          <div class="grid-2">
+            <div class="field">
+              <label for="b-name">Your name</label>
+              <input id="b-name" required placeholder="e.g. Ritu Sharma">
+            </div>
+            <div class="field">
+              <label for="b-phone">Phone / WhatsApp number</label>
+              <input id="b-phone" required placeholder="10-digit mobile number" pattern="[0-9]{10}" maxlength="10">
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="b-category">Service needed</label>
+              <select id="b-category" required>
+                <option value="">Choose one</option>
+                <option>Electrician</option>
+                <option>Plumber</option>
+                <option>AC Repair</option>
+		<option>Sofa Cleaning</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="b-locality">Locality</label>
+              <select id="b-locality" required>
+                <option value="">Choose one</option>
+                <option>Bistupur</option>
+                <option>Sakchi</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="b-date">Preferred date</label>
+              <input id="b-date" type="date" required>
+            </div>
+            <div class="field">
+              <label for="b-slot">Preferred time</label>
+              <select id="b-slot" required>
+                <option value="">Choose one</option>
+                <option>Morning (9am–12pm)</option>
+                <option>Afternoon (12pm–4pm)</option>
+                <option>Evening (4pm–8pm)</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="b-notes">What's the issue? (optional)</label>
+            <textarea id="b-notes" placeholder="e.g. AC not cooling, making noise since last week"></textarea>
+          </div>
+          <button type="submit" class="btn accent">Request booking</button>
+        </form>
+        <div id="booking-confirm" style="display:none"></div>
+      </div>
+    </section>
+
+    <!-- DISPATCH VIEW -->
+    <section class="view" id="view-dispatch">
+      <div class="page-head">
+        <h1>Dispatch board</h1>
+        <p>Assign incoming requests to an available provider and track jobs through to completion.</p>
+      </div>
+
+      <div class="metrics" id="metrics"></div>
+
+      <div class="filters">
+        <select id="f-status">
+          <option value="">All statuses</option>
+          <option>New</option>
+          <option>Assigned</option>
+          <option>Completed</option>
+          <option>Cancelled</option>
+        </select>
+        <select id="f-category">
+          <option value="">All services</option>
+          <option>Electrician</option>
+          <option>Plumber</option>
+          <option>AC Repair</option>
+        </select>
+      </div>
+
+      <div class="job-list" id="job-list"></div>
+    </section>
+
+    <!-- PROVIDERS VIEW -->
+    <section class="view" id="view-providers">
+      <div class="page-head">
+        <h1>Providers</h1>
+        <p>Your vetted roster. Keep 3+ active per category so no booking is left unassigned.</p>
+      </div>
+
+      <div class="card">
+        <form id="provider-form">
+          <div class="grid-2">
+            <div class="field">
+              <label for="p-name">Provider name</label>
+              <input id="p-name" required placeholder="e.g. Manoj Tiwari">
+            </div>
+            <div class="field">
+              <label for="p-phone">Phone number</label>
+              <input id="p-phone" required placeholder="10-digit mobile number" pattern="[0-9]{10}" maxlength="10">
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="p-category">Category</label>
+              <select id="p-category" required>
+                <option value="">Choose one</option>
+                <option>Electrician</option>
+                <option>Plumber</option>
+                <option>AC Repair</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="p-locality">Locality</label>
+              <select id="p-locality" required>
+                <option value="">Choose one</option>
+                <option>Bistupur</option>
+                <option>Sakchi</option>
+                <option>Both</option>
+              </select>
+            </div>
+          </div>
+          <div class="field" style="max-width:200px">
+            <label for="p-fee">Per-lead fee (₹)</label>
+            <input id="p-fee" type="number" min="0" step="5" value="30" required>
+          </div>
+          <button type="submit" class="btn">Add provider</button>
+        </form>
+      </div>
+
+      <div class="roster-list" id="roster-list"></div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Shared state ----------
+  // providers / bookings are kept in memory and re-rendered whenever they
+  // change — either from a live db snapshot (shared mode) or from a local
+  // mutation (local-only fallback mode, used when the db capability isn't
+  // available on this view).
+  var providers = [];
+  var bookings = [];
+  var db = null;             // set once claude.use("db") resolves, else stays null
+  var LOCAL_KEY = "localkaam_local_v1";
+
+  function uid(prefix) {
+    return prefix + "-" + Math.random().toString(36).slice(2, 7);
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function setBanner(text) {
+    var el = document.getElementById("mode-banner");
+    if (el) el.textContent = text;
+  }
+
+  // ---------- Local-only fallback (used only if db is unavailable) ----------
+  function loadLocal() {
+    try {
+      var raw = localStorage.getItem(LOCAL_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) { /* storage unavailable */ }
+    return null;
+  }
+  function persistLocal() {
+    try { localStorage.setItem(LOCAL_KEY, JSON.stringify({ providers: providers, bookings: bookings })); }
+    catch (e) { /* private browsing or storage full — state still works in memory */ }
+  }
+  function seedLocalIfEmpty() {
+    var saved = loadLocal();
+    if (saved) {
+      providers = saved.providers || [];
+      bookings = saved.bookings || [];
+      return;
+    }
+    providers = [
+      { id: "p1", name: "Manoj Tiwari", phone: "9800000001", category: "Electrician", locality: "Bistupur", fee: 30, active: true },
+      { id: "p2", name: "Sunita Devi", phone: "9800000002", category: "Plumber", locality: "Sakchi", fee: 25, active: true },
+      { id: "p3", name: "Rakesh Mahato", phone: "9800000003", category: "AC Repair", locality: "Both", fee: 40, active: true }
+    ];
+    bookings = [
+      { id: "bk-1001", name: "Ritu Sharma", phone: "9123456780", category: "Electrician", locality: "Bistupur", date: "", slot: "Morning (9am–12pm)", notes: "Fan not working in bedroom", status: "New", providerId: null, createdAt: Date.now() - 86400000 }
+    ];
+    persistLocal();
+  }
+
+  // ---------- Data operations (route to db when available, else local) ----------
+  function addBooking(data) {
+    if (db) {
+      return db.collection("bookings").add(data).then(function (ref) { return ref.id; });
+    }
+    var id = uid("bk");
+    bookings.unshift(Object.assign({ id: id }, data));
+    persistLocal();
+    renderDispatch();
+    return Promise.resolve(id);
+  }
+
+  function addProvider(data) {
+    if (db) {
+      return db.collection("providers").add(data);
+    }
+    providers.push(Object.assign({ id: uid("p") }, data));
+    persistLocal();
+    renderProviders();
+    return Promise.resolve();
+  }
+
+  function updateBooking(id, patch) {
+    if (db) {
+      return db.collection("bookings").doc(id).update(patch);
+    }
+    var booking = bookings.filter(function (b) { return b.id === id; })[0];
+    if (booking) Object.assign(booking, patch);
+    persistLocal();
+    renderDispatch();
+    return Promise.resolve();
+  }
+
+  function updateProvider(id, patch) {
+    if (db) {
+      return db.collection("providers").doc(id).update(patch);
+    }
+    var provider = providers.filter(function (p) { return p.id === id; })[0];
+    if (provider) Object.assign(provider, patch);
+    persistLocal();
+    renderProviders();
+    return Promise.resolve();
+  }
+
+  function removeProvider(id) {
+    if (db) {
+      return db.collection("providers").doc(id).delete();
+    }
+    providers = providers.filter(function (p) { return p.id !== id; });
+    persistLocal();
+    renderProviders();
+    return Promise.resolve();
+  }
+
+  // ---------- Navigation ----------
+  var railButtons = document.querySelectorAll(".rail button[data-view]");
+  railButtons.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      railButtons.forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      document.querySelectorAll(".view").forEach(function (v) { v.classList.remove("active"); });
+      document.getElementById("view-" + btn.dataset.view).classList.add("active");
+      if (btn.dataset.view === "dispatch") renderDispatch();
+      if (btn.dataset.view === "providers") renderProviders();
+    });
+  });
+
+  // ---------- Booking form ----------
+  var bookingForm = document.getElementById("booking-form");
+  var todayField = document.getElementById("b-date");
+  todayField.min = new Date().toISOString().slice(0, 10);
+
+  bookingForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var categoryVal = document.getElementById("b-category").value;
+    var submitBtn = bookingForm.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    addBooking({
+      name: document.getElementById("b-name").value.trim(),
+      phone: document.getElementById("b-phone").value.trim(),
+      category: categoryVal,
+      locality: document.getElementById("b-locality").value,
+      date: document.getElementById("b-date").value,
+      slot: document.getElementById("b-slot").value,
+      notes: document.getElementById("b-notes").value.trim(),
+      status: "New",
+      providerId: null,
+      createdAt: Date.now()
+    }).then(function (id) {
+      var confirm = document.getElementById("booking-confirm");
+      confirm.style.display = "block";
+      confirm.innerHTML =
+        '<div class="confirm">Request received — reference <b>' + escapeHtml(id) + '</b>. ' +
+        "We'll confirm your " + escapeHtml(categoryVal || "service") + " provider on WhatsApp within 30 minutes.</div>";
+      bookingForm.reset();
+      todayField.min = new Date().toISOString().slice(0, 10);
+      submitBtn.disabled = false;
+    }).catch(function () {
+      submitBtn.disabled = false;
+      alert("Couldn't send that just now — please try again.");
+    });
+  });
+
+  // ---------- Provider form ----------
+  var providerForm = document.getElementById("provider-form");
+  providerForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    addProvider({
+      name: document.getElementById("p-name").value.trim(),
+      phone: document.getElementById("p-phone").value.trim(),
+      category: document.getElementById("p-category").value,
+      locality: document.getElementById("p-locality").value,
+      fee: Number(document.getElementById("p-fee").value) || 0,
+      active: true
+    }).then(function () {
+      providerForm.reset();
+      document.getElementById("p-fee").value = 30;
+    });
+  });
+
+  // ---------- Dispatch rendering ----------
+  var STATUS_CLASS = { New: "new", Assigned: "assigned", Completed: "completed", Cancelled: "cancelled" };
+
+  function completedCountFor(providerId) {
+    return bookings.filter(function (b) { return b.providerId === providerId && b.status === "Completed"; }).length;
+  }
+
+  function avgRatingFor(providerId) {
+    var rated = bookings.filter(function (b) { return b.providerId === providerId && typeof b.rating === "number"; });
+    if (!rated.length) return null;
+    var sum = rated.reduce(function (acc, b) { return acc + b.rating; }, 0);
+    return { avg: (sum / rated.length).toFixed(1), count: rated.length };
+  }
+
+  function isRepeatCustomer(phone) {
+    return bookings.filter(function (b) { return b.phone === phone; }).length > 1;
+  }
+
+  function renderMetrics() {
+    var total = bookings.length;
+    var assignedOrDone = bookings.filter(function (b) { return b.status === "Assigned" || b.status === "Completed"; }).length;
+    var fillRate = total ? Math.round((assignedOrDone / total) * 100) : 0;
+    var phones = {};
+    bookings.forEach(function (b) { phones[b.phone] = (phones[b.phone] || 0) + 1; });
+    var repeatCustomers = Object.keys(phones).filter(function (p) { return phones[p] > 1; }).length;
+
+    var metrics = [
+      { num: total, lbl: "Total bookings" },
+      { num: bookings.filter(function (b) { return b.status === "New"; }).length, lbl: "Awaiting assignment" },
+      { num: fillRate + "%", lbl: "Fill rate" },
+      { num: repeatCustomers, lbl: "Repeat customers" }
+    ];
+    document.getElementById("metrics").innerHTML = metrics.map(function (m) {
+      return '<div class="metric"><div class="num">' + m.num + '</div><div class="lbl">' + m.lbl + '</div></div>';
+    }).join("");
+  }
+
+  function providerOptionsFor(booking) {
+    var eligible = providers.filter(function (p) {
+      return p.active && p.category === booking.category &&
+        (p.locality === booking.locality || p.locality === "Both");
+    });
+    if (!eligible.length) return '<option value="">No matching provider — add one</option>';
+    var opts = '<option value="">Assign provider…</option>';
+    eligible.forEach(function (p) {
+      var selected = booking.providerId === p.id ? " selected" : "";
+      opts += '<option value="' + p.id + '"' + selected + '>' + escapeHtml(p.name) + " · ₹" + p.fee + " lead fee</option>";
+    });
+    return opts;
+  }
+
+  function renderDispatch() {
+    if (!document.getElementById("view-dispatch").classList.contains("active")) return;
+    renderMetrics();
+    var statusFilter = document.getElementById("f-status").value;
+    var categoryFilter = document.getElementById("f-category").value;
+    var list = bookings.slice().sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); }).filter(function (b) {
+      return (!statusFilter || b.status === statusFilter) && (!categoryFilter || b.category === categoryFilter);
+    });
+
+    var container = document.getElementById("job-list");
+    if (!list.length) {
+      container.innerHTML = '<div class="empty">No bookings match this filter yet.</div>';
+      return;
+    }
+
+    container.innerHTML = list.map(function (b) {
+      var provider = providers.filter(function (p) { return p.id === b.providerId; })[0];
+      var dateStr = b.date ? new Date(b.date + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "no date given";
+      var assignSelect = (b.status === "Completed" || b.status === "Cancelled") ? "" :
+        '<select data-assign="' + b.id + '">' + providerOptionsFor(b) + '</select>';
+      var actionButtons = "";
+      if (b.status !== "Completed" && b.status !== "Cancelled") {
+        actionButtons += '<button class="btn small ghost" data-complete="' + b.id + '" ' + (provider ? "" : "disabled") + '>Mark done</button>';
+        actionButtons += '<button class="btn small ghost" data-cancel="' + b.id + '">Cancel</button>';
+      }
+      var ratingStr = typeof b.rating === "number" ? '<span class="stars">' + "★".repeat(b.rating) + "☆".repeat(5 - b.rating) + '</span>' : "";
+      return (
+        '<div class="job">' +
+          '<div class="job-main">' +
+            '<div class="job-top">' +
+              '<span class="job-cat">' + escapeHtml(b.category) + '</span>' +
+              '<span class="tag ' + STATUS_CLASS[b.status] + '">' + b.status + '</span>' +
+              (isRepeatCustomer(b.phone) ? '<span class="tag repeat">Repeat customer</span>' : "") +
+              ratingStr +
+            '</div>' +
+            '<div class="job-meta">' + escapeHtml(b.name) + " · " + escapeHtml(b.phone) + " · " + escapeHtml(b.locality) +
+              " · " + dateStr + ", " + escapeHtml(b.slot || "no slot") +
+              (b.notes ? " · " + escapeHtml(b.notes) : "") +
+              (provider ? " · assigned to " + escapeHtml(provider.name) : "") +
+              (b.feedback ? " · “" + escapeHtml(b.feedback) + "”" : "") +
+            '</div>' +
+          '</div>' +
+          '<div class="job-actions">' + assignSelect + actionButtons + '</div>' +
+        '</div>'
+      );
+    }).join("");
+
+    container.querySelectorAll("[data-assign]").forEach(function (sel) {
+      sel.addEventListener("change", function () {
+        updateBooking(sel.dataset.assign, { providerId: sel.value || null, status: sel.value ? "Assigned" : "New" });
+      });
+    });
+    container.querySelectorAll("[data-complete]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var raw = window.prompt("Customer rating for this job (1-5, leave blank to skip):", "");
+        var rating = null;
+        if (raw !== null && raw.trim() !== "") {
+          var n = parseInt(raw, 10);
+          if (n >= 1 && n <= 5) rating = n;
+        }
+        var patch = { status: "Completed" };
+        if (rating !== null) {
+          patch.rating = rating;
+          var feedback = window.prompt("Any feedback from the customer? (optional)", "");
+          if (feedback) patch.feedback = feedback.trim();
+        }
+        updateBooking(btn.dataset.complete, patch);
+      });
+    });
+    container.querySelectorAll("[data-cancel]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        updateBooking(btn.dataset.cancel, { status: "Cancelled" });
+      });
+    });
+  }
+
+  document.getElementById("f-status").addEventListener("change", renderDispatch);
+  document.getElementById("f-category").addEventListener("change", renderDispatch);
+
+  // ---------- Providers rendering ----------
+  function renderProviders() {
+    if (!document.getElementById("view-providers").classList.contains("active")) return;
+    var container = document.getElementById("roster-list");
+    if (!providers.length) {
+      container.innerHTML = '<div class="empty">No providers yet — add your first one above.</div>';
+      return;
+    }
+    container.innerHTML = providers.map(function (p) {
+      var rating = avgRatingFor(p.id);
+      var ratingStr = rating ? " · " + rating.avg + "★ avg (" + rating.count + " rated)" : "";
+      return (
+        '<div class="prov">' +
+          '<div>' +
+            '<div class="prov-name">' + escapeHtml(p.name) + '</div>' +
+            '<div class="prov-meta">' + escapeHtml(p.category) + " · " + escapeHtml(p.locality) + " · " + escapeHtml(p.phone) +
+              " · ₹" + p.fee + " per lead · " + completedCountFor(p.id) + " jobs completed" + ratingStr + "</div>" +
+          '</div>' +
+          '<label class="switch"><input type="checkbox" data-toggle="' + p.id + '" ' + (p.active ? "checked" : "") + '> Active</label>' +
+          '<button class="btn small ghost" data-remove="' + p.id + '">Remove</button>' +
+        '</div>'
+      );
+    }).join("");
+
+    container.querySelectorAll("[data-toggle]").forEach(function (cb) {
+      cb.addEventListener("change", function () {
+        updateProvider(cb.dataset.toggle, { active: cb.checked });
+      });
+    });
+    container.querySelectorAll("[data-remove]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        removeProvider(btn.dataset.remove);
+      });
+    });
+  }
+
+  // ---------- One-time seed of the shared store, guarded by a lease ----------
+  function seedDbIfEmpty() {
+    return db.doc("meta/seed").acquire({ holder: "seed-" + uid("s"), ttlMs: 8000 }).then(function (lease) {
+      if (!lease.acquired) return;
+      return db.collection("providers").limit(1).get().then(function (snap) {
+        if (!snap.empty) return;
+        return Promise.all([
+          db.collection("providers").add({ name: "Manoj Tiwari", phone: "9800000001", category: "Electrician", locality: "Bistupur", fee: 30, active: true }),
+          db.collection("providers").add({ name: "Sunita Devi", phone: "9800000002", category: "Plumber", locality: "Sakchi", fee: 25, active: true }),
+          db.collection("providers").add({ name: "Rakesh Mahato", phone: "9800000003", category: "AC Repair", locality: "Both", fee: 40, active: true }),
+          db.collection("bookings").add({ name: "Ritu Sharma", phone: "9123456780", category: "Electrician", locality: "Bistupur", date: "", slot: "Morning (9am–12pm)", notes: "Fan not working in bedroom", status: "New", providerId: null, createdAt: Date.now() - 86400000 })
+        ]);
+      });
+    }).catch(function () { /* seeding is best-effort; missing seed just means an empty board */ });
+  }
+
+  // ---------- Startup: try the shared db, fall back to local-only ----------
+  function startLocalFallback() {
+    setBanner("Local-only mode · this browser only");
+    seedLocalIfEmpty();
+    renderDispatch();
+    renderProviders();
+  }
+
+  if (window.claude && typeof window.claude.use === "function") {
+    window.claude.use("db").then(function (resolved) {
+      if (!resolved) { startLocalFallback(); return; }
+      db = resolved;
+      setBanner("Shared mode · synced live");
+
+      db.collection("providers").onSnapshot(function (snap) {
+        providers = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
+        renderDispatch();
+        renderProviders();
+      }, function () { setBanner("Shared mode · connection issue"); });
+
+      db.collection("bookings").onSnapshot(function (snap) {
+        bookings = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
+        renderDispatch();
+      }, function () { setBanner("Shared mode · connection issue"); });
+
+      seedDbIfEmpty();
+    }).catch(function () { startLocalFallback(); });
+    // Safety net: if the viewer never answers, use() resolves null after ~10s
+    // anyway, so no extra timeout is needed here.
+  } else {
+    startLocalFallback();
+  }
+})();
+</script>
+</body>
+</html>
